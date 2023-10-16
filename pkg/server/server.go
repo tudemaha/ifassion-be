@@ -14,7 +14,8 @@ func StartServer() {
 	router := gin.Default()
 	routes.SetupRouterGroup(router)
 
-	err := router.Run(os.Getenv("PORT"))
+	port := ":" + os.Getenv("PORT")
+	err := router.Run(port)
 	if err != nil {
 		log.Fatalf("ERROR StartServer fatal error: %v", err)
 	}
