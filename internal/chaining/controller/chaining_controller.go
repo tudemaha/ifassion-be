@@ -8,6 +8,7 @@ import (
 	"github.com/tudemaha/ifassion-be/internal/chaining/dto"
 	"github.com/tudemaha/ifassion-be/internal/global/responses"
 	"github.com/tudemaha/ifassion-be/pkg/mongo"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func NewChainingHandler() gin.HandlerFunc {
@@ -28,9 +29,29 @@ func NewChainingHandler() gin.HandlerFunc {
 			return
 		}
 
+		client = mongo.MongoConnection("indicators")
+		var indicator dto.Indicator
+		filter := bson.D{{Key: "code", Value: "I01"}}
+		if err := client.Coll.FindOne(context.TODO(), filter).Decode(&indicator); err != nil {
+			response.DefaultInternalError()
+			c.AbortWithStatusJSON(response.Code, response)
+			return
+		}
+
 		response.DefaultCreated()
 		response.Message = "new chaining inserted successfully"
-		response.Data = map[string]interface{}{"id": result.InsertedID}
+		chainingData := map[string]interface{}{
+			"id":      result.InsertedID,
+			"fninish": false,
+		}
+		questionData := map[string]string{
+			"id":       indicator.Code,
+			"question": "Apakah Anda " + indicator.IndicatorString + "?",
+		}
+		response.Data = map[string]interface{}{
+			"chaining": chainingData,
+			"question": questionData,
+		}
 		c.JSON(response.Code, response)
 	}
 }
