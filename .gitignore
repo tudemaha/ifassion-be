@@ -46,4 +46,7 @@ go.work
 .history
 .ionide
 
+# Don't include PDf file
+*.pdf
+
 # End of https://www.toptal.com/developers/gitignore/api/go,dotenv,visualstudiocode
