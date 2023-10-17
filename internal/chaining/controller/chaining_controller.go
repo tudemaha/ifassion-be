@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/tudemaha/ifassion-be/internal/chaining/dto"
+	chainingDto "github.com/tudemaha/ifassion-be/internal/chaining/dto"
 	"github.com/tudemaha/ifassion-be/internal/chaining/utils"
+	globalDto "github.com/tudemaha/ifassion-be/internal/global/dto"
 	"github.com/tudemaha/ifassion-be/internal/global/responses"
 	"github.com/tudemaha/ifassion-be/pkg/mongo"
 	"go.mongodb.org/mongo-driver/bson"
@@ -18,7 +19,7 @@ func NewChainingHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var response responses.Response
 
-		var newData dto.ResultData
+		var newData globalDto.ResultData
 		newData.Time = time.Now().String()
 		newData.Database.False = make([]string, 0)
 		newData.Database.True = make([]string, 0)
@@ -36,7 +37,7 @@ func NewChainingHandler() gin.HandlerFunc {
 		}
 
 		client = mongo.MongoConnection("indicators")
-		var indicator dto.Indicator
+		var indicator globalDto.Indicator
 		filter := bson.D{{Key: "code", Value: "I01"}}
 		if err := client.Coll.FindOne(context.TODO(), filter).Decode(&indicator); err != nil {
 			panic(err)
@@ -65,7 +66,7 @@ func AddIndicatorHandler() gin.HandlerFunc {
 		var response responses.Response
 
 		chainingId := c.Param("id")
-		var QuestionInput dto.UserIndicatorInput
+		var QuestionInput chainingDto.UserIndicatorInput
 		if err := c.BindJSON(&QuestionInput); err != nil {
 			panic(err)
 		}
@@ -88,7 +89,7 @@ func AddIndicatorHandler() gin.HandlerFunc {
 			panic(err)
 		}
 
-		var resultData dto.ResultData
+		var resultData globalDto.ResultData
 		if err := clientResult.Coll.FindOne(context.TODO(), filterID).Decode(&resultData); err != nil {
 			panic(err)
 		}
@@ -102,7 +103,7 @@ func AddIndicatorHandler() gin.HandlerFunc {
 		}
 		defer cursor.Close(context.TODO())
 
-		var ruleData dto.Rule
+		var ruleData globalDto.Rule
 		for cursor.Next(context.TODO()) {
 			if err := cursor.Decode(&ruleData); err != nil {
 				response.DefaultInternalError()
@@ -133,7 +134,7 @@ func AddIndicatorHandler() gin.HandlerFunc {
 				defer mongo.MongoCloseConnection(clientPassion)
 				if ruleData.Then[0] == 'P' {
 					filter := bson.D{{Key: "code", Value: ruleData.Then}}
-					var passion dto.Passion
+					var passion globalDto.Passion
 					if err := clientPassion.Coll.FindOne(context.TODO(), filter).Decode(&passion); err != nil {
 						panic(err)
 					}
@@ -225,7 +226,7 @@ func AddIndicatorHandler() gin.HandlerFunc {
 			Key:   "code",
 			Value: nextIndicatorID,
 		}}
-		var indicator dto.Indicator
+		var indicator globalDto.Indicator
 		if err := clientIndicator.Coll.FindOne(context.TODO(), filterIndicator).Decode(&indicator); err != nil {
 			panic(err)
 		}
