@@ -24,7 +24,7 @@ func CreatePdf(ResponseData dto.ResponseData) (string, error) {
 	})
 
 	pdf.SetFooterFunc(func() {
-		pdf.SetFont("Poppins", "", 10)
+		pdf.SetFont("Poppins", "", 8)
 		_, height := pdf.GetPageSize()
 		local, _ := time.LoadLocation("Asia/Makassar")
 		pdf.Text(60, height-8, "Date Created: "+time.Now().In(local).Format("Monday, 02 January 2006 15:04:05"))
