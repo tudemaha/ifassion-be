@@ -7,4 +7,5 @@ import (
 
 func ChainingRoutes(g *gin.RouterGroup) {
 	g.POST("", chainingController.NewChainingHandler())
+	g.POST("/:id", chainingController.AddIndicatorHandler())
 }
