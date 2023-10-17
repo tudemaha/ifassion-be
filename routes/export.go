@@ -7,4 +7,5 @@ import (
 
 func ExportRoutes(g *gin.RouterGroup) {
 	g.GET("/web/:id", controller.ExportWebHandler())
+	g.GET("/pdf/:id", controller.ExportPdfHandler())
 }
