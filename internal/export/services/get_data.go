@@ -38,6 +38,7 @@ func GetResultData(chainingId string) exportDto.ResponseData {
 	if err != nil {
 		panic(err)
 	}
+	defer cursor.Close(context.TODO())
 
 	var indicators []string
 	for cursor.Next(context.TODO()) {

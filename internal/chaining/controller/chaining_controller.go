@@ -26,28 +26,34 @@ func NewChainingHandler() gin.HandlerFunc {
 		newData.Rules = make([]string, 0)
 		newData.Status = false
 
-		client := mongo.MongoConnection("results")
-		defer mongo.MongoCloseConnection(client)
+		clientResult := mongo.MongoConnection("results")
+		defer mongo.MongoCloseConnection(clientResult)
 
-		result, err := client.Coll.InsertOne(context.TODO(), newData)
+		result, err := clientResult.Coll.InsertOne(context.TODO(), newData)
 		if err != nil {
-			response.DefaultBadRequest()
-			c.AbortWithStatusJSON(response.Code, err.Error())
+			response.DefaultInternalError()
+			response.Data = map[string]string{"error": err.Error()}
+			c.AbortWithStatusJSON(response.Code, response)
 			return
 		}
 
-		client = mongo.MongoConnection("indicators")
+		clientIndicator := mongo.MongoConnection("indicators")
+		defer mongo.MongoCloseConnection(clientIndicator)
+
 		var indicator globalDto.Indicator
 		filter := bson.D{{Key: "code", Value: "I01"}}
-		if err := client.Coll.FindOne(context.TODO(), filter).Decode(&indicator); err != nil {
-			panic(err)
+		if err := clientIndicator.Coll.FindOne(context.TODO(), filter).Decode(&indicator); err != nil {
+			response.DefaultInternalError()
+			response.Data = map[string]string{"error": err.Error()}
+			c.AbortWithStatusJSON(response.Code, response)
+			return
 		}
 
 		response.DefaultCreated()
 		response.Message = "new chaining inserted successfully"
 		chainingData := map[string]interface{}{
-			"id":      result.InsertedID,
-			"fninish": false,
+			"id":     result.InsertedID,
+			"finish": false,
 		}
 		questionData := map[string]string{
 			"id":       indicator.Code,
@@ -68,7 +74,10 @@ func AddIndicatorHandler() gin.HandlerFunc {
 		chainingId := c.Param("id")
 		var QuestionInput chainingDto.UserIndicatorInput
 		if err := c.BindJSON(&QuestionInput); err != nil {
-			panic(err)
+			response.DefaultInternalError()
+			response.Data = map[string]string{"error": err.Error()}
+			c.AbortWithStatusJSON(response.Code, response)
+			return
 		}
 		statusString := strconv.FormatBool(QuestionInput.QuestionStatus)
 
@@ -86,12 +95,18 @@ func AddIndicatorHandler() gin.HandlerFunc {
 		}}
 		_, err := clientResult.Coll.UpdateOne(context.TODO(), filterID, update)
 		if err != nil {
-			panic(err)
+			response.DefaultNotFound()
+			response.Data = map[string]string{"error": err.Error()}
+			c.AbortWithStatusJSON(response.Code, response)
+			return
 		}
 
 		var resultData globalDto.ResultData
 		if err := clientResult.Coll.FindOne(context.TODO(), filterID).Decode(&resultData); err != nil {
-			panic(err)
+			response.DefaultNotFound()
+			response.Data = map[string]string{"error": err.Error()}
+			c.AbortWithStatusJSON(response.Code, response)
+			return
 		}
 
 		clientRules := mongo.MongoConnection("rules")
@@ -99,7 +114,10 @@ func AddIndicatorHandler() gin.HandlerFunc {
 
 		cursor, err := clientRules.Coll.Find(context.TODO(), bson.D{})
 		if err != nil {
-			panic(err)
+			response.DefaultInternalError()
+			response.Data = map[string]string{"error": err.Error()}
+			c.AbortWithStatusJSON(response.Code, response)
+			return
 		}
 		defer cursor.Close(context.TODO())
 
@@ -107,7 +125,8 @@ func AddIndicatorHandler() gin.HandlerFunc {
 		for cursor.Next(context.TODO()) {
 			if err := cursor.Decode(&ruleData); err != nil {
 				response.DefaultInternalError()
-				c.AbortWithStatusJSON(response.Code, err.Error())
+				response.Data = map[string]string{"error": err.Error()}
+				c.AbortWithStatusJSON(response.Code, response)
 				return
 			}
 
@@ -125,8 +144,9 @@ func AddIndicatorHandler() gin.HandlerFunc {
 					}}
 				_, err = clientResult.Coll.UpdateOne(context.TODO(), filterID, update)
 				if err != nil {
-					response.DefaultInternalError()
-					c.AbortWithStatusJSON(response.Code, err.Error())
+					response.DefaultNotFound()
+					response.Data = map[string]string{"error": err.Error()}
+					c.AbortWithStatusJSON(response.Code, response)
 					return
 				}
 
@@ -136,7 +156,10 @@ func AddIndicatorHandler() gin.HandlerFunc {
 					filter := bson.D{{Key: "code", Value: ruleData.Then}}
 					var passion globalDto.Passion
 					if err := clientPassion.Coll.FindOne(context.TODO(), filter).Decode(&passion); err != nil {
-						panic(err)
+						response.DefaultInternalError()
+						response.Data = map[string]string{"error": err.Error()}
+						c.AbortWithStatusJSON(response.Code, response)
+						return
 					}
 
 					update = bson.D{{
@@ -151,14 +174,17 @@ func AddIndicatorHandler() gin.HandlerFunc {
 					}}
 					_, err = clientResult.Coll.UpdateOne(context.TODO(), filterID, update)
 					if err != nil {
-						panic(err)
+						response.DefaultInternalError()
+						response.Data = map[string]string{"error": err.Error()}
+						c.AbortWithStatusJSON(response.Code, response)
+						return
 					}
 
 					response.DefaultOK()
 					response.Message = "chaining finish"
 					chainingData := map[string]interface{}{
-						"id":      id,
-						"fninish": true,
+						"id":     id,
+						"finish": true,
 					}
 					response.Data = map[string]interface{}{
 						"chaining": chainingData,
@@ -177,7 +203,10 @@ func AddIndicatorHandler() gin.HandlerFunc {
 					}}
 					_, err := clientResult.Coll.UpdateOne(context.TODO(), filterID, update)
 					if err != nil {
-						panic(err)
+						response.DefaultInternalError()
+						response.Data = map[string]string{"error": err.Error()}
+						c.AbortWithStatusJSON(response.Code, response)
+						return
 					}
 				}
 				break
@@ -195,7 +224,10 @@ func AddIndicatorHandler() gin.HandlerFunc {
 
 		cursor, err = clientRules.Coll.Find(context.TODO(), filterIf)
 		if err != nil {
-			panic(err)
+			response.DefaultInternalError()
+			response.Data = map[string]string{"error": err.Error()}
+			c.AbortWithStatusJSON(response.Code, response)
+			return
 		}
 		defer cursor.Close(context.TODO())
 
@@ -204,7 +236,8 @@ func AddIndicatorHandler() gin.HandlerFunc {
 		for cursor.Next(context.TODO()) {
 			if err := cursor.Decode(&ruleData); err != nil {
 				response.DefaultInternalError()
-				c.AbortWithStatusJSON(response.Code, err.Error())
+				response.Data = map[string]string{"error": err.Error()}
+				c.AbortWithStatusJSON(response.Code, response)
 				return
 			}
 
@@ -228,14 +261,17 @@ func AddIndicatorHandler() gin.HandlerFunc {
 		}}
 		var indicator globalDto.Indicator
 		if err := clientIndicator.Coll.FindOne(context.TODO(), filterIndicator).Decode(&indicator); err != nil {
-			panic(err)
+			response.DefaultInternalError()
+			response.Data = map[string]string{"error": err.Error()}
+			c.AbortWithStatusJSON(response.Code, response)
+			return
 		}
 
 		response.DefaultOK()
-		response.Message = "new chaining inserted successfully"
+		response.Message = "chaining question inserted successfully"
 		chainingData := map[string]interface{}{
-			"id":      id,
-			"fninish": false,
+			"id":     id,
+			"finish": false,
 		}
 		questionData := map[string]string{
 			"id":       indicator.Code,
