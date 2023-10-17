@@ -22,11 +22,29 @@ func ExportWebHandler() gin.HandlerFunc {
 
 func ExportPdfHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// var response responses.Response
+		var response responses.Response
 
-		// chainingId := c.Param("id")
-		// responseData := services.GetResultData(chainingId)
+		chainingId := c.Param("id")
+		responseData := services.GetResultData(chainingId)
 
-		// services.CreatePdf(responseData)
+		filename, err := services.CreatePdf(responseData)
+		if err != nil {
+			response.DefaultInternalError()
+			response.Data = map[string]string{"error": err.Error()}
+			c.AbortWithStatusJSON(response.Code, response)
+			return
+		}
+
+		protocol := "http://"
+		if c.Request.TLS != nil {
+			protocol = "https://"
+		}
+		file := protocol + c.Request.Host + "/pdf/" + filename
+		response.DefaultOK()
+		response.Message = "pdf generated successfully"
+		response.Data = map[string]string{
+			"pdf": file,
+		}
+		c.JSON(response.Code, response)
 	}
 }

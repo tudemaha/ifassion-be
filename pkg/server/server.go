@@ -14,6 +14,8 @@ func StartServer() {
 	router := gin.Default()
 	routes.SetupRouterGroup(router)
 
+	router.Static("/pdf", "./files/pdf")
+
 	port := ":" + os.Getenv("PORT")
 	err := router.Run(port)
 	if err != nil {

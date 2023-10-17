@@ -63,7 +63,7 @@ func CreatePdf(ResponseData dto.ResponseData) (string, error) {
 	pdf.SetFont("Poppins", "B", 12)
 	pdf.CellFormat(col1Width, currentHeight, "Indicators", "1", 0, "C", true, 0, "")
 	pdf.SetTextColor(0, 0, 0)
-	pdf.SetFont("Poppins", "", 12)
+	pdf.SetFont("Poppins", "", 10)
 	for i, value := range ResponseData.Indicators {
 		pdf.CellFormat(col2Width, rowHeight, value, "1", 0, "L", false, 0, "")
 		if i < rowLen-1 {
