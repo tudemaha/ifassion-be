@@ -58,7 +58,10 @@ func CreatePdf(ResponseData dto.ResponseData) (string, error) {
 	pdf.Ln(-1)
 
 	rowLen := len(ResponseData.Indicators)
-	currentHeight := rowHeight * float64(rowLen)
+	currentHeight := float64(rowLen)
+	if rowLen > 1 {
+		currentHeight = rowHeight * float64(rowLen)
+	}
 	pdf.SetTextColor(255, 255, 255)
 	pdf.SetFont("Poppins", "B", 12)
 	pdf.CellFormat(col1Width, currentHeight, "Indicators", "1", 0, "C", true, 0, "")
