@@ -22,7 +22,6 @@ func IncrementCode(sliceTrue, sliceFalse []string) string {
 	smallest := 1
 	sort.Ints(sliceNum)
 	for _, element := range sliceNum {
-		fmt.Println(element)
 		if element == smallest {
 			smallest++
 		} else {
