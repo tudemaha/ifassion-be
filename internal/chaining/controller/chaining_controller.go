@@ -20,7 +20,8 @@ func NewChainingHandler() gin.HandlerFunc {
 		var response responses.Response
 
 		var newData globalDto.ResultData
-		newData.Time = time.Now().String()
+		local, _ := time.LoadLocation("Asia/Makassar")
+		newData.Time = time.Now().In(local).Format("2006-01-02 15:04:05") + " WITA"
 		newData.Database.False = make([]string, 0)
 		newData.Database.True = make([]string, 0)
 		newData.Rules = make([]string, 0)
