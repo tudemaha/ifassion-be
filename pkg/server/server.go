@@ -14,17 +14,16 @@ func StartServer() {
 	log.Println("INFO StartServer: server is starting")
 
 	router := gin.Default()
-	routes.SetupRouterGroup(router)
-
 	config := cors.Config{
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
-		AllowOrigins:     []string{"*"},
+		AllowAllOrigins:  true,
 		AllowMethods:     []string{"GET", "POST", "OPTIONS", "PUT", "DELETE"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}
-
 	router.Use(cors.New(config))
+
+	routes.SetupRouterGroup(router)
 
 	router.Static("/pdf", "./files/pdf")
 
