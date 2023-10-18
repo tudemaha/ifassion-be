@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
@@ -14,7 +13,6 @@ func APIKeyValidator() gin.HandlerFunc {
 		var response responses.Response
 
 		auth := c.GetHeader("Authorization")
-		fmt.Println(auth)
 		if auth == "" {
 			response.DefaultUnauthorized()
 			c.AbortWithStatusJSON(response.Code, response)

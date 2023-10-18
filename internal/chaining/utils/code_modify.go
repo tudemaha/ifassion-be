@@ -2,13 +2,34 @@ package utils
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 )
 
-func IncrementCode(codeString string) string {
-	num, _ := strconv.Atoi(codeString[1:])
-	num++
+func IncrementCode(sliceTrue, sliceFalse []string) string {
+	sliceNum := make([]int, 0)
 
-	incrementedCodeString := fmt.Sprintf("%c%02d", codeString[0], num)
+	for _, element := range sliceTrue {
+		num, _ := strconv.Atoi(element[1:])
+		sliceNum = append(sliceNum, num)
+	}
+
+	for _, element := range sliceFalse {
+		num, _ := strconv.Atoi(element[1:])
+		sliceNum = append(sliceNum, num)
+	}
+
+	smallest := 1
+	sort.Ints(sliceNum)
+	for _, element := range sliceNum {
+		fmt.Println(element)
+		if element == smallest {
+			smallest++
+		} else {
+			break
+		}
+	}
+
+	incrementedCodeString := fmt.Sprintf("%c%02d", 'I', smallest)
 	return incrementedCodeString
 }

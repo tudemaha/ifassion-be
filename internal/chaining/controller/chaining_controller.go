@@ -88,7 +88,7 @@ func AddIndicatorHandler() gin.HandlerFunc {
 		id, _ := primitive.ObjectIDFromHex(chainingId)
 		filterID := bson.D{{Key: "_id", Value: id}}
 		update := bson.D{{
-			Key: "$push",
+			Key: "$addToSet",
 			Value: bson.D{{
 				Key:   "database." + statusString,
 				Value: QuestionInput.QuestionID,
@@ -137,7 +137,7 @@ func AddIndicatorHandler() gin.HandlerFunc {
 				}
 				update = bson.D{
 					{
-						Key: "$push",
+						Key: "$addToSet",
 						Value: bson.D{{
 							Key:   "rules",
 							Value: ruleData.Code,
@@ -196,7 +196,7 @@ func AddIndicatorHandler() gin.HandlerFunc {
 
 				if ruleData.Then[0] == 'I' {
 					update = bson.D{{
-						Key: "$push",
+						Key: "$addToSet",
 						Value: bson.D{{
 							Key:   "database.true",
 							Value: ruleData.Then,
@@ -232,8 +232,41 @@ func AddIndicatorHandler() gin.HandlerFunc {
 		}
 		defer cursor.Close(context.TODO())
 
+		countDatabase := len(resultData.Database.False) + len(resultData.Database.True)
+		if countDatabase == 22 {
+			update = bson.D{{
+				Key: "$set",
+				Value: bson.D{{
+					Key:   "status",
+					Value: true,
+				}, {
+					Key:   "passion",
+					Value: "P99",
+				}},
+			}}
+			_, err = clientResult.Coll.UpdateOne(context.TODO(), filterID, update)
+			if err != nil {
+				response.DefaultInternalError()
+				response.Data = map[string]string{"error": err.Error()}
+				c.AbortWithStatusJSON(response.Code, response)
+				return
+			}
+
+			response.DefaultOK()
+			response.Message = "chaining finish"
+			chainingData := map[string]interface{}{
+				"id":     id,
+				"finish": true,
+			}
+			response.Data = map[string]interface{}{
+				"chaining": chainingData,
+			}
+			c.JSON(response.Code, response)
+			return
+		}
+
 		var nextIndicatorID string
-		nextIndicatorID = utils.IncrementCode(QuestionInput.QuestionID)
+		nextIndicatorID = utils.IncrementCode(resultData.Database.True, resultData.Database.False)
 		for cursor.Next(context.TODO()) {
 			if err := cursor.Decode(&ruleData); err != nil {
 				response.DefaultInternalError()
